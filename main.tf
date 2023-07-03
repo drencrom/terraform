@@ -53,9 +53,9 @@ module "ceph_cluster" {
     rgw  = 1
   }
   placement = {
-    osds = "${local.juju_ids[8]},${local.juju_ids[16]},${local.juju_ids[17]}"
-    mons = "${local.juju_ids[9]}"
-    rgw  = "${local.juju_ids[10]}"
+    osds = local.ceph.placement.osds
+    mons = local.ceph.placement.mons
+    rgw  = local.ceph.placement.rgw
   }
   relation_names = {
     nova   = module.nova.application_names.compute

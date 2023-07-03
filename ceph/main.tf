@@ -7,6 +7,14 @@ terraform {
     }
 }
 
+resource "juju_machine" "ceph_osd_machines" {
+  count  = var.placement.osds == null ? var.units.osds : 0
+  model  = var.model
+  series = var.series
+  name   = format("%s%s", "ceph_osd", count.index)
+  constraints = "mem=2G"
+}
+
 resource "juju_application" "ceph_osds" {
     model = var.model
     charm {
@@ -16,10 +24,18 @@ resource "juju_application" "ceph_osds" {
     }
     config = var.config.osds
     units = var.units.osds
-    placement = var.placement.osds
+    placement = var.placement.osds == null ? join(",", [for machine in juju_machine.ceph_osd_machines : split(":", machine.id)[1]]) : var.placement.osds
     lifecycle {
         ignore_changes = [ placement, ]
     }
+}
+
+resource "juju_machine" "ceph_mon_machines" {
+  count  = var.placement.mons == null ? var.units.mons : 0
+  model  = var.model
+  series = var.series
+  name   = format("%s%s", "ceph_mon", count.index)
+  constraints = "mem=2G"
 }
 
 resource "juju_application" "ceph_mon" {
@@ -32,10 +48,18 @@ resource "juju_application" "ceph_mon" {
     }
     config = var.config.mons
     units = var.units.mons
-    placement = var.placement.mons
+    placement = var.placement.mons == null ? join(",", [for machine in juju_machine.ceph_mon_machines : split(":", machine.id)[1]]) : var.placement.mons
     lifecycle {
         ignore_changes = [ placement, ]
     }
+}
+
+resource "juju_machine" "ceph_rgw_machines" {
+  count  = var.placement.rgw == null ? var.units.rgw : 0
+  model  = var.model
+  series = var.series
+  name   = format("%s%s", "ceph_rgw", count.index)
+  constraints = "mem=2G"
 }
 
 resource "juju_application" "ceph_radosgw" {
@@ -48,7 +72,7 @@ resource "juju_application" "ceph_radosgw" {
     }
 
     units = var.units.rgw
-    placement = var.placement.rgw
+    placement = var.placement.rgw == null ? join(",", [for machine in juju_machine.ceph_rgw_machines : split(":", machine.id)[1]]) : var.placement.rgw
     lifecycle {
         ignore_changes = [ placement, ]
     }

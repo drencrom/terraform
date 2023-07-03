@@ -35,6 +35,11 @@ locals {
       }
       rgw  = {}
     }
+    placement = {
+      osds   = null
+      mons   = null
+      rgw    = null
+    }
   }
 }
 
@@ -55,7 +60,7 @@ locals {
       }
     }
     units = {
-      compute          = 2
+      compute          = 1
       cloud_controller = 1
     }
     placement = {
@@ -145,7 +150,7 @@ locals {
 
 locals {
   rabbitmq = {
-    units     = 1
+    units     = 3
     channel   = "3.9/stable"
     placement = null #"${local.juju_ids[3]}"
   }
