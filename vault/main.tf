@@ -7,6 +7,14 @@ terraform {
     }
 }
 
+resource "juju_machine" "vault_machines" {
+  count  = var.placement.vault == null ? var.units.vault : 0
+  model  = var.model
+  series = var.series
+  name   = format("%s%s", "vault", count.index)
+  constraints = "mem=2G"
+}
+
 resource "juju_application" "vault" {
     model = var.model
     name = "vault"
@@ -19,7 +27,7 @@ resource "juju_application" "vault" {
     config = var.config.vault
 
     units = var.units.vault
-    placement = var.placement.vault
+    placement = var.placement.vault == null ? join(",", [for machine in juju_machine.vault_machines : split(":", machine.id)[1]]) : var.placement.vault
     lifecycle {
         ignore_changes = [ placement, ]
     }
@@ -33,8 +41,7 @@ resource "juju_application" "vault_mysql_router" {
         channel = var.mysql.channel
         series = var.series
     }
-    units = 0 // Subordinate applications cannot have units
-    #placement = juju_application.vault.placement
+    units = 0 # Subordinate charms must have 0 units
     lifecycle {
         ignore_changes = [ placement, ]
     }

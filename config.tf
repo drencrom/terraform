@@ -68,6 +68,7 @@ locals {
 locals {
   mysql = {
     channel = "8.0/stable"
+    placement = "${local.juju_ids[0]},${local.juju_ids[1]},${local.juju_ids[2]}"
   }
 }
 
@@ -80,7 +81,7 @@ locals {
       auto-generate-root-ca-cert   = "true"
     }
     units     = 1
-    placement = "${local.juju_ids[2]}"
+    placement = null #"${local.juju_ids[2]}"
   }
 }
 
@@ -93,9 +94,6 @@ locals {
         flat-network-providers  = "physnet1"
         openstack-origin        = local.openstack.origin
 	enable-ml2-port-security = "true"
-	#ssl_ca = "*ssl_ca"
-      	#ssl_cert = "*ssl_cert"
-      	#ssl_key = "*ssl_key"
       	global-physnet-mtu = "8958"  # maximum available mtu in stsstack
       	path-mtu = "1550"
       	physical-network-mtus = "physnet1:1500"
@@ -103,7 +101,7 @@ locals {
       	manage-neutron-plugin-legacy-mode = "true"
       }
       units     = 1
-      placement = "${local.juju_ids[3]}"
+      placement = null #"${local.juju_ids[3]}"
     }
     gateway = {
       config = {
@@ -112,7 +110,7 @@ locals {
         openstack-origin        = local.openstack.origin
       }
       units     = 1
-      placement = "${local.juju_ids[0]}"
+      placement = null #"${local.juju_ids[0]}"
     }
     openvswitch = {
       config = {
@@ -126,28 +124,28 @@ locals {
 locals {
   keystone = {
     units     = 1
-    placement = "${local.juju_ids[4]}"
+    placement = null #"${local.juju_ids[4]}"
   }
 }
 
 locals {
   placement = {
     units     = 1
-    placement = "${local.juju_ids[5]}"
+    placement = null #"${local.juju_ids[5]}"
   }
 }
 
 locals {
   glance = {
     units     = 1
-    placement = "${local.juju_ids[6]}"
+    placement = null #"${local.juju_ids[6]}"
   }
 }
 
 locals {
   rabbitmq = {
     channel = "3.9/stable"
-    placement = "${local.juju_ids[1]}"
+    placement = "${local.juju_ids[3]}"
   }
 }
 
@@ -159,7 +157,7 @@ locals {
       openstack-origin   = "distro"
     }
     units     = 1
-    placement = "${local.juju_ids[7]}"
+    placement = null #"${local.juju_ids[7]}"
   }
 }
 

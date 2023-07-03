@@ -7,6 +7,14 @@ terraform {
     }
 }
 
+resource "juju_machine" "neutron_api_machines" {
+  count  = var.placement.neutron_api == null ? var.units.neutron_api : 0
+  model  = var.model
+  series = var.series
+  name   = format("%s%s", "neutron_api", count.index)
+  constraints = "mem=2G"
+}
+
 resource "juju_application" "neutron_api" {
     model = var.model
     name = "neutron-api"
@@ -19,7 +27,7 @@ resource "juju_application" "neutron_api" {
     config = var.config.neutron_api
 
     units = var.units.neutron_api
-    placement = var.placement.neutron_api
+    placement = var.placement.neutron_api == null ? join(",", [for machine in juju_machine.neutron_api_machines : split(":", machine.id)[1]]) : var.placement.neutron_api
     lifecycle {
         ignore_changes = [ placement, ]
     }
@@ -34,11 +42,18 @@ resource "juju_application" "neutron_api_mysql_router" {
         series = var.series
     }
 
-    units = 0
-    #placement = juju_application.neutron_api.placement
+    units = 0 # Subordinate charms must have 0 units
     lifecycle {
         ignore_changes = [ placement, ]
     }
+}
+
+resource "juju_machine" "neutron_gateway_machines" {
+  count  = var.placement.neutron_gateway == null ? var.units.neutron_gateway : 0
+  model  = var.model
+  series = var.series
+  name   = format("%s%s", "neutron_gateway", count.index)
+  constraints = "mem=4G"
 }
 
 resource "juju_application" "neutron_gateway" {
@@ -53,7 +68,7 @@ resource "juju_application" "neutron_gateway" {
     config = var.config.neutron_gateway
 
     units = var.units.neutron_gateway
-    placement = var.placement.neutron_gateway
+    placement = var.placement.neutron_gateway == null ? join(",", [for machine in juju_machine.neutron_gateway_machines : split(":", machine.id)[1]]) : var.placement.neutron_gateway
     lifecycle {
         ignore_changes = [ placement, ]
     }
@@ -70,8 +85,7 @@ resource "juju_application" "neutron_openvswitch" {
 
     config = var.config.neutron_openvswitch
 
-    units = 0
-    #placement = var.placement.neutron_openvswitch
+    units = 0 # Subordinate charms must have 0 units
     lifecycle {
         ignore_changes = [ placement, ]
     }

@@ -7,6 +7,14 @@ terraform {
     }
 }
 
+resource "juju_machine" "glance_machines" {
+  count  = var.placement.glance == null ? var.units.glance : 0
+  model  = var.model
+  series = var.series
+  name   = format("%s%s", "glance", count.index)
+  constraints = "mem=1G"
+}
+
 resource "juju_application" "glance" {
     model = var.model
     name = "glance"
@@ -17,7 +25,7 @@ resource "juju_application" "glance" {
     }
 
     units = var.units.glance
-    placement = var.placement.glance
+    placement = var.placement.glance == null ? join(",", [for machine in juju_machine.glance_machines : split(":", machine.id)[1]]) : var.placement.glance
     lifecycle {
         ignore_changes = [ placement, ]
     }
@@ -33,7 +41,6 @@ resource "juju_application" "glance_mysql_router" {
     }
 
     units = 0 # Subordinate charms must have 0 units
-    #placement = juju_application.glance.placement
     lifecycle {
         ignore_changes = [ placement, ]
     }

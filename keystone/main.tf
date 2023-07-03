@@ -7,6 +7,14 @@ terraform {
     }
 }
 
+resource "juju_machine" "keystone_machines" {
+  count  = var.placement.keystone == null ? var.units.keystone : 0
+  model  = var.model
+  series = var.series
+  name   = format("%s%s", "keystone", count.index)
+  constraints = "mem=1G"
+}
+
 resource "juju_application" "keystone" {
     model = var.model
     name = "keystone"
@@ -17,7 +25,7 @@ resource "juju_application" "keystone" {
     }
 
     units = var.units.keystone
-    placement = var.placement.keystone
+    placement = var.placement.keystone == null ? join(",", [for machine in juju_machine.keystone_machines : split(":", machine.id)[1]]) : var.placement.keystone
     lifecycle {
         ignore_changes = [ placement, ]
     }
@@ -33,7 +41,6 @@ resource "juju_application" "keystone_mysql_router" {
     }
 
     units = 0 // Subordinate charms cannot have units
-    #placement = juju_application.keystone.placement
     lifecycle {
         ignore_changes = [ placement, ]
     }

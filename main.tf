@@ -21,7 +21,7 @@ resource "juju_model" "ovb" {
 }
 
 resource "juju_machine" "machines" {
-  count  = 11
+  count  = 4
   model  = juju_model.ovb.name
   series = local.series
   name   = count.index
@@ -107,7 +107,7 @@ resource "juju_application" "mysql_innodb_cluster" {
   }
 
   units     = 3
-  placement = "${local.juju_ids[8]},${local.juju_ids[9]},${local.juju_ids[10]}"
+  placement = local.mysql.placement
   lifecycle {
     ignore_changes = [placement, ]
   }
@@ -254,3 +254,9 @@ module "cinder" {
   }
 }
 
+module "mysql" {
+  source = "./mysql"
+  model  = juju_model.ovb.name  
+  channel = local.mysql.channel
+  placement = local.mysql.placement
+}

@@ -7,6 +7,14 @@ terraform {
     }
 }
 
+resource "juju_machine" "cinder_machines" {
+  count  = var.placement.cinder == null ? var.units.cinder : 0
+  model  = var.model
+  series = var.series
+  name   = format("%s%s", "cinder", count.index)
+  constraints = "mem=2G"
+}
+
 resource "juju_application" "cinder" {
     model = var.model
     name = "cinder"
@@ -19,7 +27,7 @@ resource "juju_application" "cinder" {
     config = var.config.cinder
 
     units = var.units.cinder
-    placement = var.placement.cinder
+    placement = var.placement.cinder == null ? join(",", [for machine in juju_machine.cinder_machines : split(":", machine.id)[1]]) : var.placement.cinder
     lifecycle {
         ignore_changes = [ placement, ]
     }
