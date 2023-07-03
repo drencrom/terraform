@@ -20,17 +20,6 @@ resource "juju_model" "ovb" {
 
 }
 
-resource "juju_machine" "machines" {
-  count  = 4
-  model  = juju_model.ovb.name
-  series = local.series
-  name   = count.index
-}
-
-locals {
-  juju_ids = [for machine in juju_machine.machines : split(":", machine.id)[1]]
-}
-
 module "nova" {
   source  = "./nova"
   model   = juju_model.ovb.name
@@ -44,9 +33,9 @@ module "nova" {
   placement = local.nova.placement
   relation_names = {
     keystone             = module.keystone.application_names.keystone
-    mysql_innodb_cluster = juju_application.mysql_innodb_cluster.name
+    mysql_innodb_cluster = module.mysql.application_names.mysql_innodb_cluster
     neutron_api          = module.neutron_ovs.application_names.neutron_api
-    rabbitmq             = juju_application.rabbitmq.name
+    rabbitmq             = module.rabbitmq.application_names.rabbitmq
     vault                = local.vault.enabled ? module.vault[0].application_names.vault : null 
   }
 }
@@ -93,23 +82,7 @@ module "vault" {
     vault = local.vault.placement
   }
   relation_names = {
-    mysql_innodb_cluster = juju_application.mysql_innodb_cluster.name
-  }
-}
-
-resource "juju_application" "mysql_innodb_cluster" {
-  model = juju_model.ovb.name
-  name  = "mysql-innodb-cluster" // Needed the name or you get an error about how application- is an invalid application tag
-  charm {
-    name    = "mysql-innodb-cluster"
-    channel = local.mysql.channel
-    series  = local.series
-  }
-
-  units     = 3
-  placement = local.mysql.placement
-  lifecycle {
-    ignore_changes = [placement, ]
+    mysql_innodb_cluster = module.mysql.application_names.mysql_innodb_cluster
   }
 }
 
@@ -136,9 +109,9 @@ module "neutron_ovs" {
   }
   relation_names = {
     keystone             = module.keystone.application_names.keystone
-    mysql_innodb_cluster = juju_application.mysql_innodb_cluster.name
+    mysql_innodb_cluster = module.mysql.application_names.mysql_innodb_cluster
     nova_compute         = module.nova.application_names.compute
-    rabbitmq             = juju_application.rabbitmq.name
+    rabbitmq             = module.rabbitmq.application_names.rabbitmq
     vault                = local.vault.enabled ? module.vault[0].application_names.vault : null
     nova_cloud_controller = module.nova.application_names.cloud_controller
   }
@@ -159,25 +132,18 @@ module "keystone" {
     keystone = local.keystone.placement
   }
   relation_names = {
-    mysql_innodb_cluster = juju_application.mysql_innodb_cluster.name
+    mysql_innodb_cluster = module.mysql.application_names.mysql_innodb_cluster
     vault                = local.vault.enabled ? module.vault[0].application_names.vault : null
   }
 }
 
-resource "juju_application" "rabbitmq" {
+module "rabbitmq" {
+  source = "./rabbitmq"
   model = juju_model.ovb.name
-  name  = "rabbitmq-server"
-  charm {
-    name    = "rabbitmq-server"
-    channel = local.rabbitmq.channel
-    series  = local.series
-  }
-
-  units     = 1
+  channel = local.rabbitmq.channel
+  units = local.rabbitmq.units
   placement = local.rabbitmq.placement
-  lifecycle {
-    ignore_changes = [placement, ]
-  }
+  series = local.series
 }
 
 module "placement" {
@@ -196,7 +162,7 @@ module "placement" {
   }
   relation_names = {
     keystone              = module.keystone.application_names.keystone
-    mysql_innodb_cluster  = juju_application.mysql_innodb_cluster.name
+    mysql_innodb_cluster  = module.mysql.application_names.mysql_innodb_cluster
     nova_cloud_controller = module.nova.application_names.cloud_controller
     vault                 = local.vault.enabled ? module.vault[0].application_names.vault : null
   }
@@ -218,7 +184,7 @@ module "glance" {
   }
   relation_names = {
     keystone              = module.keystone.application_names.keystone
-    mysql_innodb_cluster  = juju_application.mysql_innodb_cluster.name
+    mysql_innodb_cluster  = module.mysql.application_names.mysql_innodb_cluster
     nova_cloud_controller = module.nova.application_names.cloud_controller
     nova_compute          = module.nova.application_names.compute
     vault                 = local.vault.enabled ? module.vault[0].application_names.vault : null
@@ -246,17 +212,19 @@ module "cinder" {
     ceph_mons             = local.ceph.enabled ? module.ceph_cluster[0].application_names.mons : null
     glance                = module.glance.application_names.glance
     keystone              = module.keystone.application_names.keystone
-    mysql_innodb_cluster  = juju_application.mysql_innodb_cluster.name
+    mysql_innodb_cluster  = module.mysql.application_names.mysql_innodb_cluster
     nova_compute          = module.nova.application_names.compute
     nova_cloud_controller = module.nova.application_names.cloud_controller
-    rabbitmq              = juju_application.rabbitmq.name
+    rabbitmq              = module.rabbitmq.application_names.rabbitmq
     vault                 = local.vault.enabled ? module.vault[0].application_names.vault : null
   }
 }
 
 module "mysql" {
   source = "./mysql"
-  model  = juju_model.ovb.name  
+  model  = juju_model.ovb.name
   channel = local.mysql.channel
   placement = local.mysql.placement
+  units = local.mysql.units
+  series = local.series
 }

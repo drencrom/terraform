@@ -68,13 +68,14 @@ locals {
 locals {
   mysql = {
     channel = "8.0/stable"
-    placement = "${local.juju_ids[0]},${local.juju_ids[1]},${local.juju_ids[2]}"
+    placement = null #"${local.juju_ids[0]},${local.juju_ids[1]},${local.juju_ids[2]}"
+    units = 3
   }
 }
 
 locals {
   vault = {
-    enabled = false
+    enabled = true
     channel = "1.7/stable"
     config = {
       totally-unsecure-auto-unlock = "true"
@@ -144,8 +145,9 @@ locals {
 
 locals {
   rabbitmq = {
-    channel = "3.9/stable"
-    placement = "${local.juju_ids[3]}"
+    units     = 1
+    channel   = "3.9/stable"
+    placement = null #"${local.juju_ids[3]}"
   }
 }
 

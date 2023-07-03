@@ -40,7 +40,7 @@ resource "juju_application" "keystone_mysql_router" {
         series = var.series
     }
 
-    units = 0 // Subordinate charms cannot have units
+    units = 0 # Subordinate charms must have 0 units
     lifecycle {
         ignore_changes = [ placement, ]
     }
