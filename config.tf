@@ -64,8 +64,8 @@ locals {
       cloud_controller = 1
     }
     placement = {
-      compute          = null #"${local.juju_ids[0]}"
-      cloud_controller = null #"${local.juju_ids[1]}"
+      compute          = null #"${local.hyperconverged_juju_ids[0]}"
+      cloud_controller = null #"lxd:${local.hyperconverged_juju_ids[0]}"
     }
   }
 }
@@ -73,7 +73,7 @@ locals {
 locals {
   mysql = {
     channel = "8.0/stable"
-    placement = null #"${local.juju_ids[0]},${local.juju_ids[1]},${local.juju_ids[2]}"
+    placement = null #"lxd:${local.hyperconverged_juju_ids[0]},lxd:${local.hyperconverged_juju_ids[1]},lxd:${local.hyperconverged_juju_ids[2]}"
     units = 3
   }
 }
@@ -87,7 +87,7 @@ locals {
       auto-generate-root-ca-cert   = "true"
     }
     units     = 1
-    placement = null #"${local.juju_ids[2]}"
+    placement = null
   }
 }
 
@@ -107,7 +107,7 @@ locals {
       	manage-neutron-plugin-legacy-mode = "true"
       }
       units     = 1
-      placement = null #"${local.juju_ids[3]}"
+      placement = null #"lxd:${local.hyperconverged_juju_ids[1]}"
     }
     gateway = {
       config = {
@@ -116,7 +116,7 @@ locals {
         openstack-origin        = local.openstack.origin
       }
       units     = 1
-      placement = null #"${local.juju_ids[0]}"
+      placement = null #"${local.hyperconverged_juju_ids[1]}"
     }
     openvswitch = {
       config = {
@@ -130,21 +130,21 @@ locals {
 locals {
   keystone = {
     units     = 1
-    placement = null #"${local.juju_ids[4]}"
+    placement = null #"lxd:${local.hyperconverged_juju_ids[2]}"
   }
 }
 
 locals {
   placement = {
     units     = 1
-    placement = null #"${local.juju_ids[5]}"
+    placement = null #"lxd:${local.hyperconverged_juju_ids[2]}"
   }
 }
 
 locals {
   glance = {
     units     = 1
-    placement = null #"${local.juju_ids[6]}"
+    placement = null #"lxd:${local.hyperconverged_juju_ids[2]}"
   }
 }
 
@@ -152,7 +152,7 @@ locals {
   rabbitmq = {
     units     = 1
     channel   = "3.9/stable"
-    placement = null #"${local.juju_ids[3]}"
+    placement = null #"lxd:${local.hyperconverged_juju_ids[0]}"
   }
 }
 
@@ -164,7 +164,7 @@ locals {
       openstack-origin   = local.openstack.origin
     }
     units     = 1
-    placement = null #"${local.juju_ids[7]}"
+    placement = null #"lxd:${local.hyperconverged_juju_ids[1]}"
   }
 }
 
@@ -172,7 +172,7 @@ locals {
   dashboard = {
     enabled   = false
     units     = 1
-    placement = null #"lxd:${local.hyperconverged_juju_ids[0]}"
+    placement = null
   }
 }
 
@@ -187,8 +187,8 @@ locals {
       designate = 1
     }
     placement = {
-      bind      = null #"lxd:${local.hyperconverged_juju_ids[2]}"
-      designate = null #"lxd:${local.hyperconverged_juju_ids[2]}"
+      bind      = null
+      designate = null
     }
   }
 }
@@ -197,7 +197,7 @@ locals {
   memcached = {
     channel   = "latest/stable"
     units     = 1
-    placement = null #"lxd:${local.hyperconverged_juju_ids[0]}"
+    placement = null
   }
 }
 
@@ -210,7 +210,7 @@ locals {
       share-protocols = "NFS"
     }
     units     = 1
-    placement = null #"lxd:${local.hyperconverged_juju_ids[1]}"
+    placement = null
     generic = {
       config = {
         driver-service-instance-flavor-id = "1000" // This needs a value of a real image ID
