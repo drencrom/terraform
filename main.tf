@@ -228,3 +228,81 @@ module "mysql" {
   units = local.mysql.units
   series = local.series
 }
+
+module "dashboard" {
+  count = local.dashboard.enabled ? 1 : 0
+  source = "./dashboard"
+  model  = juju_model.ovb.name
+  channel = {
+    openstack = local.openstack.channel
+    mysql     = local.mysql.channel
+  }
+  series = local.series
+  units = {
+    dashboard = local.dashboard.units
+  }
+  placement = {
+    dashboard = local.dashboard.placement
+  }
+  relation_names = {
+    keystone             = module.keystone.application_names.keystone
+    mysql_innodb_cluster = module.mysql.application_names.mysql_innodb_cluster
+    vault                = local.vault.enabled ? module.vault[0].application_names.vault : null
+  }
+}
+
+module "designate" {
+  count = local.designate.enabled ? 1 : 0
+  source = "./designate"
+  model  = juju_model.ovb.name
+  channel = {
+    openstack = local.openstack.channel
+    memcached = local.memcached.channel
+    mysql     = local.mysql.channel
+  }
+  series = local.series
+  config = {
+    designate = local.designate.config
+  }
+  units = {
+    bind      = local.designate.units.bind
+    designate = local.designate.units.designate
+    memcached = local.memcached.units
+  }
+  placement = {
+    bind      = local.designate.placement.bind
+    designate = local.designate.placement.designate
+    memcached = local.memcached.placement
+  }
+  relation_names = {
+    keystone             = module.keystone.application_names.keystone
+    mysql_innodb_cluster = module.mysql.application_names.mysql_innodb_cluster
+    neutron_api          = module.neutron_ovs.application_names.neutron_api
+    rabbitmq             = module.rabbitmq.application_names.rabbitmq
+  }
+}
+
+module "manila" {
+  count = local.manila.enabled ? 1 : 0
+  source = "./manila"
+  model  = juju_model.ovb.name
+  channel = {
+    openstack = local.openstack.channel
+  }
+  series = local.series
+  config = {
+    manila         = local.manila.config
+    manila_generic = local.manila.generic.config
+  }
+  units = {
+    manila = local.manila.units
+  }
+  placement = {
+    manila = local.manila.placement
+  }
+  relation_names = {
+    keystone             = module.keystone.application_names.keystone
+    mysql_innodb_cluster = module.mysql.application_names.mysql_innodb_cluster
+    rabbitmq             = module.rabbitmq.application_names.rabbitmq
+  }
+}

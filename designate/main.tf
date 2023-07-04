@@ -7,6 +7,14 @@ terraform {
     }
 }
 
+resource "juju_machine" "designate_machines" {
+  count  = var.placement.designate == null ? var.units.designate : 0
+  model  = var.model
+  series = var.series
+  name   = format("%s%s", "designate", count.index)
+  constraints = "mem=2G"
+}
+
 resource "juju_application" "designate" {
     model = var.model
     name = "designate"
@@ -17,10 +25,18 @@ resource "juju_application" "designate" {
     }
     config = var.config.designate
     units = var.units.designate
-    placement = var.placement.designate
+    placement = var.placement.designate == null ? join(",", [for machine in juju_machine.designate_machines : split(":", machine.id)[1]]) : var.placement.designate
     lifecycle {
         ignore_changes = [ placement, ]
     }
+}
+
+resource "juju_machine" "designate_bind_machines" {
+  count  = var.placement.bind == null ? var.units.bind : 0
+  model  = var.model
+  series = var.series
+  name   = format("%s%s", "designate_bind", count.index)
+  constraints = "mem=2G"
 }
 
 resource "juju_application" "designate_bind" {
@@ -32,7 +48,7 @@ resource "juju_application" "designate_bind" {
         series = var.series
     }
     units = var.units.bind
-    placement = var.placement.bind
+    placement = var.placement.bind == null ? join(",", [for machine in juju_machine.designate_bind_machines : split(":", machine.id)[1]]) : var.placement.bind
     lifecycle {
         ignore_changes = [ placement, ]
     }
@@ -49,6 +65,14 @@ resource "juju_integration" "designate_designate_bind" {
     }
 }
 
+resource "juju_machine" "memcached_machines" {
+  count  = var.placement.memcached == null ? var.units.memcached : 0
+  model  = var.model
+  series = var.series
+  name   = format("%s%s", "memcached", count.index)
+  constraints = "mem=2G"
+}
+
 resource "juju_application" "memcached" {
     model = var.model
     name = "memcached"
@@ -58,7 +82,7 @@ resource "juju_application" "memcached" {
         series = var.series
     }
     units = var.units.memcached
-    placement = var.placement.memcached
+    placement = var.placement.memcached == null ? join(",", [for machine in juju_machine.memcached_machines : split(":", machine.id)[1]]) : var.placement.memcached
     lifecycle {
         ignore_changes = [ placement, ]
     }
@@ -118,4 +142,3 @@ resource "juju_integration" "designate_neutron_api" {
         name = var.relation_names.neutron_api
     }
 }
-

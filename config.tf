@@ -80,7 +80,7 @@ locals {
 
 locals {
   vault = {
-    enabled = true
+    enabled = false
     channel = "1.7/stable"
     config = {
       totally-unsecure-auto-unlock = "true"
@@ -150,7 +150,7 @@ locals {
 
 locals {
   rabbitmq = {
-    units     = 3
+    units     = 1
     channel   = "3.9/stable"
     placement = null #"${local.juju_ids[3]}"
   }
@@ -161,10 +161,61 @@ locals {
     config = {
       block-device       = "None"
       glance-api-version = "2"
-      openstack-origin   = "distro"
+      openstack-origin   = local.openstack.origin
     }
     units     = 1
     placement = null #"${local.juju_ids[7]}"
+  }
+}
+
+locals {
+  dashboard = {
+    enabled   = false
+    units     = 1
+    placement = null #"lxd:${local.hyperconverged_juju_ids[0]}"
+  }
+}
+
+locals {
+  designate = {
+    enabled = false
+    config = {
+      nameservers = "ns1.not-a-real-domain.com. ns2.not-a-real-domain.com."
+    }
+    units = {
+      bind      = 1
+      designate = 1
+    }
+    placement = {
+      bind      = null #"lxd:${local.hyperconverged_juju_ids[2]}"
+      designate = null #"lxd:${local.hyperconverged_juju_ids[2]}"
+    }
+  }
+}
+
+locals {
+  memcached = {
+    channel   = "latest/stable"
+    units     = 1
+    placement = null #"lxd:${local.hyperconverged_juju_ids[0]}"
+  }
+}
+
+
+locals {
+  manila = {
+    enabled = false
+    config = {
+      default-share-backend = "cephfsnfs1"
+      share-protocols = "NFS"
+    }
+    units     = 1
+    placement = null #"lxd:${local.hyperconverged_juju_ids[1]}"
+    generic = {
+      config = {
+        driver-service-instance-flavor-id = "1000" // This needs a value of a real image ID
+      }
+    }
   }
 }
 

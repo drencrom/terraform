@@ -7,6 +7,14 @@ terraform {
     }
 }
 
+resource "juju_machine" "manila_machines" {
+  count  = var.placement.manila == null ? var.units.manila : 0
+  model  = var.model
+  series = var.series
+  name   = format("%s%s", "manila", count.index)
+  constraints = "mem=2G"
+}
+
 resource "juju_application" "manila" {
     model = var.model
     name = "manila"
@@ -17,7 +25,7 @@ resource "juju_application" "manila" {
     }
     config = var.config.manila
     units = var.units.manila
-    placement = var.placement.manila
+    placement = var.placement.manila == null ? join(",", [for machine in juju_machine.manila_machines : split(":", machine.id)[1]]) : var.placement.manila
     lifecycle {
         ignore_changes = [ placement, ]
     }
@@ -32,8 +40,7 @@ resource "juju_application" "manila_generic" {
         series = var.series
     }
     config = var.config.manila_generic
-    units = 0 // Subordinate applications cannot have units
-    placement = juju_application.manila.placement
+    units = 0 # Subordinate charms must have 0 units
     lifecycle {
         ignore_changes = [ placement, ]
     }

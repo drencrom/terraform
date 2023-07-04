@@ -7,6 +7,14 @@ terraform {
     }
 }
 
+resource "juju_machine" "dashboard_machines" {
+  count  = var.placement.dashboard == null ? var.units.dashboard : 0
+  model  = var.model
+  series = var.series
+  name   = format("%s%s", "dashboard", count.index)
+  constraints = "mem=2G"
+}
+
 resource "juju_application" "openstack_dashboard" {
     model = var.model
     name = "openstack-dashboard"
@@ -17,7 +25,7 @@ resource "juju_application" "openstack_dashboard" {
     }
 
     units = var.units.dashboard
-    placement = var.placement.dashboard
+    placement = var.placement.dashboard == null ? join(",", [for machine in juju_machine.dashboard_machines : split(":", machine.id)[1]]) : var.placement.dashboard
     lifecycle {
         ignore_changes = [ placement, ]
     }
@@ -33,7 +41,6 @@ resource "juju_application" "openstack_dashboard_mysql_router" {
     }
 
     units = 0 # Subordinate charms must have 0 units
-    placement = juju_application.openstack_dashboard.placement
     lifecycle {
         ignore_changes = [ placement, ]
     }
@@ -79,6 +86,7 @@ resource "juju_integration" "openstack_dashboard_keystone" {
 }
 
 resource "juju_integration" "openstack_dashboard_vault" {
+    count = var.relation_names.vault == null ? 0 : 1
     model = var.model
     application {
         name = juju_application.openstack_dashboard.name
