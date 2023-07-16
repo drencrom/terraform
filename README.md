@@ -2,6 +2,7 @@
 This repository contains a Terraform plan that deploys OpenStack using the Terraform Juju provider.
 
 ## How I use this plan
+First configure the desired OpenStack installation state by editing the `config.tf` file.
   * `terraform init`
     * Downloads juju provider and other required modules
   * `terraform apply -parallelism=1`
